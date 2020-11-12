@@ -4,6 +4,32 @@ const offset_y = 50;
 const width = 500;
 const height = 500;
 
+var tooltip = d3.select("body")
+  .append("div")
+  .attr("class", "tooltip")
+  .style("opacity", 0);
+
+function handleMouseover(event, d) {
+  d3.select(this)
+    .attr('fill', 'orange');
+
+  tooltip.transition()
+    .duration(200)
+    .style("opacity", 0.9);
+
+  tooltip.text(d.properties.Name)
+    .style("left", (event.pageX) + "px")
+    .style("top", (event.pageY - 28) + "px");
+}
+
+function handleMouseout(d, i) {
+  d3.select(this).attr('fill', 'lightblue');
+
+  tooltip.transition()
+    .duration(500)
+    .style("opacity", 0);
+}
+
 function create_map(geojson) {
 
   // reverse geojson to remedy winding issue
@@ -12,6 +38,8 @@ function create_map(geojson) {
       return turf.rewind(feature, {reverse:true})
     }
   );
+
+  console.log(fixed);
 
   // scale and translate to fit container
   var projection = d3.geoEquirectangular()
@@ -23,8 +51,7 @@ function create_map(geojson) {
   var geoGenerator = d3.geoPath()
     .projection(projection);
 
-  d3.select('body')
-    .append('svg')
+  d3.select('svg')
     .attr('height', height)
     .attr('width', width)
     .append('g')
@@ -37,6 +64,11 @@ function create_map(geojson) {
     .append('path')
     .attr('d', geoGenerator)
     .attr('fill', 'lightblue');
+
+  d3.selectAll('path')
+    .on('mouseover', handleMouseover)
+    .on('mouseout', handleMouseout);
 }
 
-d3.json(map_dest).then(geojson => create_map(geojson));
+d3.json(map_dest)
+  .then(geojson => create_map(geojson));
